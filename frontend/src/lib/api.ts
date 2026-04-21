@@ -1,7 +1,17 @@
 import axios from "axios";
 
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const isProduction = process.env.NODE_ENV === "production";
+
+if (!configuredApiUrl && isProduction) {
+  console.error(
+    "Missing NEXT_PUBLIC_API_URL in production. Set it in Netlify site environment variables."
+  );
+}
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
+  // In production, avoid defaulting to localhost which is unreachable from public origins.
+  baseURL: configuredApiUrl || (isProduction ? "/api" : "http://localhost:8000/api"),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json"
