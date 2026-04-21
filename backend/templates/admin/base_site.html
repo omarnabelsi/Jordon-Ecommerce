@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/custom-admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="jumpman-branding">
+  <h1 id="site-name"><a href="{% url 'admin:index' %}">Jumpman Ops Control</a></h1>
+  <p>Command center for products, orders, customers, and support.</p>
+</div>
+{% endblock %}

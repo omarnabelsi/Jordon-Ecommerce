@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sneaker_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sneaker_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sneaker_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sneaker_user} -d ${POSTGRES_DB:-sneaker_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: sneaker-backend
+    environment:
+      DEBUG: ${DEBUG:-true}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-to-a-very-long-random-secret-key-32chars-min}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      USE_SQLITE: "false"
+      POSTGRES_DB: ${POSTGRES_DB:-sneaker_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sneaker_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sneaker_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:3000}
+      PASSWORD_RESET_FRONTEND_URL: ${PASSWORD_RESET_FRONTEND_URL:-http://localhost:3000}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/1}
+    volumes:
+      - ./backend:/app
+      - backend_static:/app/staticfiles
+      - backend_media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: sneaker-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_static:
+  backend_media:
