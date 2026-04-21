@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useProducts } from "@/hooks/use-products";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { api } from "@/lib/api";
 import { Product } from "@/types";
 
@@ -59,9 +60,9 @@ export function ProductsCatalog() {
     [page, debouncedSearch, category, brand, size, color, available, minPrice, maxPrice, sort]
   );
 
-  const { data, isLoading, isFetching } = useProducts(filters);
+  const { data, isLoading, isFetching, error: productsError } = useProducts(filters);
 
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const response = await api.get("/products/categories/");
@@ -69,13 +70,23 @@ export function ProductsCatalog() {
     }
   });
 
-  const { data: brands } = useQuery({
+  const { data: brands, error: brandsError } = useQuery({
     queryKey: ["brands"],
     queryFn: async () => {
       const response = await api.get("/products/brands/");
       return response.data.results ?? response.data;
     }
   });
+
+  const productsErrorMessage = productsError
+    ? getApiErrorMessage(productsError, "Unable to load products right now.")
+    : null;
+  const categoriesErrorMessage = categoriesError
+    ? getApiErrorMessage(categoriesError, "Unable to load categories.")
+    : null;
+  const brandsErrorMessage = brandsError
+    ? getApiErrorMessage(brandsError, "Unable to load brands.")
+    : null;
 
   useEffect(() => {
     setPage(1);
@@ -205,6 +216,21 @@ export function ProductsCatalog() {
 
         <div>
           {isLoading ? <p className="text-white/60">Loading products...</p> : null}
+          {productsErrorMessage ? (
+            <p className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {productsErrorMessage}
+            </p>
+          ) : null}
+          {categoriesErrorMessage ? (
+            <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {categoriesErrorMessage}
+            </p>
+          ) : null}
+          {brandsErrorMessage ? (
+            <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {brandsErrorMessage}
+            </p>
+          ) : null}
 
           <div className={viewMode === "grid" ? "grid gap-5 sm:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>
             {catalogItems.map((product, index) => (
