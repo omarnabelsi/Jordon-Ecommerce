@@ -180,6 +180,48 @@ npm run test:e2e
 - OpenAPI schema: /api/schema/
 - Swagger UI: /api/docs/
 
+## Netlify Deployment (Frontend)
+
+This repository is configured for Netlify to deploy the Next.js app from the `frontend` folder.
+
+### What was added
+
+- Root `netlify.toml` with:
+  - `base = "frontend"`
+  - `command = "npm run build"`
+  - `publish = ".next"`
+  - Next.js runtime plugin (`@netlify/plugin-nextjs`)
+
+### Deploy Steps
+
+1. Push the repo to GitHub (already done).
+2. In Netlify: **Add new site** -> **Import from Git**.
+3. Select this repository.
+4. Netlify will read `netlify.toml` automatically.
+5. Add required environment variable in Netlify site settings:
+   - `NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api`
+6. Trigger deploy.
+
+### Important: Backend Must Be Hosted Separately
+
+Netlify hosts the frontend only in this setup. Deploy Django backend to a backend host (Render/Railway/Fly.io/VM/etc), then configure backend environment variables for cross-site cookie auth.
+
+Recommended backend production values (`backend/.env`):
+
+```env
+DEBUG=false
+ALLOWED_HOSTS=api.your-domain.com
+FRONTEND_URLS=https://your-site.netlify.app
+PASSWORD_RESET_FRONTEND_URL=https://your-site.netlify.app
+
+JWT_COOKIE_SECURE=true
+JWT_COOKIE_SAMESITE=None
+SESSION_COOKIE_SECURE=true
+CSRF_COOKIE_SECURE=true
+```
+
+Without these cookie/security settings, login/session flows may fail when frontend and backend run on different domains.
+
 ## Notes
 
 - Stripe payment is scaffolded as a selectable method with a mock checkout path; complete Stripe intents/webhooks should be added for production payment processing.
