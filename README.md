@@ -146,6 +146,26 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### 2c) Create a test admin account
+
+After migrations, create or update the test admin user:
+
+```bash
+cd backend
+python manage.py create_test_admin --update-password
+```
+
+Default credentials are read from `backend/.env`:
+
+```env
+TEST_ADMIN_EMAIL=admin@test.local
+TEST_ADMIN_PASSWORD=TestAdmin123!
+TEST_ADMIN_FIRST_NAME=Test
+TEST_ADMIN_LAST_NAME=Admin
+```
+
+Use these credentials only for development/testing. Change password values for shared or hosted environments.
+
 ### 3) Manual Frontend Setup
 
 ```bash
@@ -154,6 +174,100 @@ npm install
 cp .env.example .env.local
 npm run dev
 ```
+
+## Environment Files (.env)
+
+Use the following files depending on your run mode.
+
+### A) Root `.env` (Docker Compose mode)
+
+Create it from root `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Example values:
+
+```env
+POSTGRES_DB=sneaker_db
+POSTGRES_USER=sneaker_user
+POSTGRES_PASSWORD=change-this-db-password
+
+DJANGO_SECRET_KEY=change-this-secret
+DEBUG=true
+ALLOWED_HOSTS=localhost,127.0.0.1
+FRONTEND_URLS=http://localhost:3000
+PASSWORD_RESET_FRONTEND_URL=http://localhost:3000
+
+REDIS_URL=redis://redis:6379/1
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+### B) Backend `backend/.env` (manual backend or hosted backend)
+
+Create it from `backend/.env.example`:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Local SQLite quick mode:
+
+```env
+DEBUG=true
+DJANGO_SECRET_KEY=change-this-secret-to-a-very-long-random-value-32chars-min
+ALLOWED_HOSTS=localhost,127.0.0.1
+USE_SQLITE=true
+FRONTEND_URLS=http://localhost:3000
+PASSWORD_RESET_FRONTEND_URL=http://localhost:3000
+JWT_COOKIE_SECURE=false
+JWT_COOKIE_SAMESITE=Lax
+SESSION_COOKIE_SECURE=false
+CSRF_COOKIE_SECURE=false
+```
+
+Hosted backend + Netlify frontend (production baseline):
+
+```env
+DEBUG=false
+ALLOWED_HOSTS=api.your-domain.com
+FRONTEND_URLS=https://your-site.netlify.app
+PASSWORD_RESET_FRONTEND_URL=https://your-site.netlify.app
+
+JWT_COOKIE_SECURE=true
+JWT_COOKIE_SAMESITE=None
+SESSION_COOKIE_SECURE=true
+CSRF_COOKIE_SECURE=true
+```
+
+### C) Frontend `frontend/.env.local`
+
+Create it from `frontend/.env.example`:
+
+```bash
+cd frontend
+cp .env.example .env.local
+```
+
+Local value:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+Netlify production value:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.your-domain.com/api
+```
+
+### D) Important notes
+
+- Do not commit real secrets in `.env` files.
+- Netlify environment key must be `NEXT_PUBLIC_API_URL` and the value must be only the URL (not `NEXT_PUBLIC_API_URL=...`).
+- Frontend and backend must both be publicly reachable in production.
 
 ## Testing
 
