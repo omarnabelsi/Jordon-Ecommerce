@@ -17,7 +17,7 @@ ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,
 if not DEBUG:
     if SECRET_KEY.startswith("django-insecure") or len(SECRET_KEY) < 32:
         raise ImproperlyConfigured("DJANGO_SECRET_KEY must be at least 32 chars and not use insecure defaults when DEBUG=false.")
-    if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
+    if not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS:
         raise ImproperlyConfigured("ALLOWED_HOSTS must be explicitly configured when DEBUG=false.")
 
 INSTALLED_APPS = [
@@ -221,6 +221,9 @@ else:
 
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "false").lower() == "true"
+# Trust X-Forwarded-Proto when behind Nginx/Render so Django treats HTTPS correctly.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = os.getenv("USE_X_FORWARDED_HOST", "false").lower() == "true"
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
