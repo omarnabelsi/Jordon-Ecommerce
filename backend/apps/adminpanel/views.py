@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,7 +29,7 @@ from apps.adminpanel.serializers import (
 )
 from apps.core.models import ContactMessage
 from apps.orders.models import Order, OrderItem
-from apps.products.models import Brand, Category, Product, ProductVariant
+from apps.products.models import Brand, Category, Product, ProductImage, ProductVariant
 
 User = get_user_model()
 
@@ -271,6 +272,7 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
 
 class AdminProductListCreateView(StaffOnlyMixin, generics.ListCreateAPIView):
     serializer_class = AdminProductListSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         return _products_queryset(self.request)
@@ -284,6 +286,17 @@ class AdminProductListCreateView(StaffOnlyMixin, generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         product = serializer.save()
+
+        image_file = request.FILES.get("image")
+        if image_file:
+            ProductImage.objects.create(
+                product=product,
+                image=image_file,
+                alt_text=request.data.get("image_alt", "") or product.name,
+                is_primary=True,
+                order=0,
+            )
+
         read_serializer = AdminProductDetailSerializer(product)
         return Response(read_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -291,6 +304,7 @@ class AdminProductListCreateView(StaffOnlyMixin, generics.ListCreateAPIView):
 class AdminProductDetailView(StaffOnlyMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related("category", "brand").prefetch_related("variants", "images")
     lookup_field = "id"
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
         if self.request.method in {"PUT", "PATCH"}:
@@ -303,6 +317,18 @@ class AdminProductDetailView(StaffOnlyMixin, generics.RetrieveUpdateDestroyAPIVi
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         product = serializer.save()
+
+        image_file = request.FILES.get("image")
+        if image_file:
+            ProductImage.objects.filter(product=product, is_primary=True).update(is_primary=False)
+            ProductImage.objects.create(
+                product=product,
+                image=image_file,
+                alt_text=request.data.get("image_alt", "") or product.name,
+                is_primary=True,
+                order=0,
+            )
+
         read_serializer = AdminProductDetailSerializer(product)
         return Response(read_serializer.data, status=status.HTTP_200_OK)
 

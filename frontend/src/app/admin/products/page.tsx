@@ -68,6 +68,7 @@ export default function AdminProductsPage() {
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>(emptyProductForm);
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
 
   const [variantForm, setVariantForm] = useState<VariantFormState>(emptyVariantForm);
   const [variantDrafts, setVariantDrafts] = useState<Record<number, { stock_quantity: string; price_adjustment: string }>>({});
@@ -147,21 +148,26 @@ export default function AdminProductsPage() {
   }, [productsQuery.data, page]);
 
   const createProductMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const response = await api.post<AdminProductDetail>("/admin/products/", payload);
+    mutationFn: async (payload: FormData) => {
+      const response = await api.post<AdminProductDetail>("/admin/products/", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
       setProductForm(emptyProductForm);
+      setProductImageFile(null);
       setIsCreating(false);
     }
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const response = await api.patch<AdminProductDetail>(`/admin/products/${editingProductId}/`, payload);
+    mutationFn: async (payload: FormData) => {
+      const response = await api.patch<AdminProductDetail>(`/admin/products/${editingProductId}/`, payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -258,6 +264,7 @@ export default function AdminProductsPage() {
     setIsCreating(true);
     setEditingProductId(null);
     setProductForm(emptyProductForm);
+    setProductImageFile(null);
     setVariantForm(emptyVariantForm);
     setVariantDrafts({});
   };
@@ -265,6 +272,7 @@ export default function AdminProductsPage() {
   const openEditEditor = (id: number) => {
     setIsCreating(false);
     setEditingProductId(id);
+    setProductImageFile(null);
     setVariantForm(emptyVariantForm);
   };
 
@@ -272,23 +280,30 @@ export default function AdminProductsPage() {
     setIsCreating(false);
     setEditingProductId(null);
     setProductForm(emptyProductForm);
+    setProductImageFile(null);
     setVariantForm(emptyVariantForm);
     setVariantDrafts({});
   };
 
-  const buildProductPayload = () => ({
-    name: productForm.name,
-    sku: productForm.sku,
-    description: productForm.description,
-    short_description: productForm.short_description,
-    category: Number(productForm.category),
-    brand: Number(productForm.brand),
-    price: productForm.price,
-    sale_price: productForm.sale_price ? productForm.sale_price : null,
-    weight: productForm.weight ? productForm.weight : null,
-    is_active: productForm.is_active,
-    is_featured: productForm.is_featured
-  });
+  const buildProductPayload = () => {
+    const payload = new FormData();
+    payload.append("name", productForm.name);
+    payload.append("sku", productForm.sku);
+    payload.append("description", productForm.description);
+    payload.append("short_description", productForm.short_description);
+    payload.append("category", productForm.category);
+    payload.append("brand", productForm.brand);
+    payload.append("price", productForm.price);
+    payload.append("sale_price", productForm.sale_price);
+    payload.append("weight", productForm.weight);
+    payload.append("is_active", String(productForm.is_active));
+    payload.append("is_featured", String(productForm.is_featured));
+    if (productImageFile) {
+      payload.append("image", productImageFile);
+      payload.append("image_alt", productForm.name);
+    }
+    return payload;
+  };
 
   const handleProductSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -593,6 +608,19 @@ export default function AdminProductsPage() {
                   className="min-h-24 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white"
                   required
                 />
+              </label>
+
+              <label className="space-y-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                Product photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setProductImageFile(event.target.files?.[0] || null)}
+                  className="h-10 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-red-700 file:px-3 file:py-1 file:text-xs file:font-semibold file:uppercase file:tracking-[0.16em] file:text-white"
+                />
+                <p className="text-[11px] normal-case tracking-normal text-slate-500">
+                  {productImageFile ? `Selected: ${productImageFile.name}` : "Choose an image from your device"}
+                </p>
               </label>
 
               <div className="grid gap-2 sm:grid-cols-2">

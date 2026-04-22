@@ -118,6 +118,13 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
 
 
 class AdminProductWriteSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, data):
+        mutable_data = data.copy()
+        for field in ("sale_price", "weight"):
+            if mutable_data.get(field) == "":
+                mutable_data[field] = None
+        return super().to_internal_value(mutable_data)
+
     class Meta:
         model = Product
         fields = [
