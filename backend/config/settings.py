@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
@@ -198,7 +199,20 @@ raw_frontend_origins = os.getenv("FRONTEND_URLS", os.getenv("FRONTEND_URL", ""))
 if DEBUG and not raw_frontend_origins:
     raw_frontend_origins = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005"
 
-FRONTEND_ORIGINS = [url.strip() for url in raw_frontend_origins.split(",") if url.strip()]
+FRONTEND_ORIGINS = []
+for item in [url.strip() for url in raw_frontend_origins.split(",") if url.strip()]:
+    normalized = item.replace("http:https://", "https://", 1)
+    normalized = normalized.replace("https:https://", "https://", 1)
+    normalized = normalized.replace("http:http://", "http://", 1)
+    normalized = normalized.rstrip("/")
+    parsed = urlsplit(normalized)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path not in {"", "/"}:
+        raise ImproperlyConfigured(
+            f"Invalid frontend origin '{item}'. Use full origins like 'https://jordon-e.netlify.app'."
+        )
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    if origin not in FRONTEND_ORIGINS:
+        FRONTEND_ORIGINS.append(origin)
 
 if not DEBUG and not FRONTEND_ORIGINS:
     raise ImproperlyConfigured("Set FRONTEND_URLS (comma-separated) for production CORS/CSRF origins.")
