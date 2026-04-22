@@ -194,11 +194,23 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-FRONTEND_URLS = os.getenv("FRONTEND_URLS", os.getenv("FRONTEND_URL", "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005"))
-PASSWORD_RESET_FRONTEND_URL = os.getenv("PASSWORD_RESET_FRONTEND_URL", "http://localhost:3000")
+raw_frontend_origins = os.getenv("FRONTEND_URLS", os.getenv("FRONTEND_URL", "")).strip()
+if DEBUG and not raw_frontend_origins:
+    raw_frontend_origins = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005"
+
+FRONTEND_ORIGINS = [url.strip() for url in raw_frontend_origins.split(",") if url.strip()]
+
+if not DEBUG and not FRONTEND_ORIGINS:
+    raise ImproperlyConfigured("Set FRONTEND_URLS (comma-separated) for production CORS/CSRF origins.")
+
+PASSWORD_RESET_FRONTEND_URL = os.getenv(
+    "PASSWORD_RESET_FRONTEND_URL",
+    FRONTEND_ORIGINS[0] if FRONTEND_ORIGINS else "http://localhost:3000",
+)
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [url.strip() for url in FRONTEND_URLS.split(",") if url.strip()]
-CSRF_TRUSTED_ORIGINS = [url.strip() for url in FRONTEND_URLS.split(",") if url.strip()]
+CORS_ALLOWED_ORIGINS = FRONTEND_ORIGINS
+CSRF_TRUSTED_ORIGINS = FRONTEND_ORIGINS
 
 if USE_SQLITE:
     CACHES = {
