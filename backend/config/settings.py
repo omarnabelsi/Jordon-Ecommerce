@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -81,16 +82,26 @@ if USE_SQLITE:
         }
     }
 else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "sneaker_db"),
-            "USER": os.getenv("POSTGRES_USER", "sneaker_user"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "sneaker_password"),
-            "HOST": os.getenv("POSTGRES_HOST", "db"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        DATABASES = {
+            "default": dj_database_url.parse(
+                DATABASE_URL,
+                conn_max_age=600,
+                ssl_require=not DEBUG,
+            )
         }
-    }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.getenv("POSTGRES_DB", "sneaker_db"),
+                "USER": os.getenv("POSTGRES_USER", "sneaker_user"),
+                "PASSWORD": os.getenv("POSTGRES_PASSWORD", "sneaker_password"),
+                "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+                "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            }
+        }
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -189,16 +200,24 @@ if USE_SQLITE:
         }
     }
 else:
-    REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/1")
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": REDIS_URL,
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            },
+    REDIS_URL = os.getenv("REDIS_URL", "").strip()
+    if REDIS_URL:
+        CACHES = {
+            "default": {
+                "BACKEND": "django_redis.cache.RedisCache",
+                "LOCATION": REDIS_URL,
+                "OPTIONS": {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                },
+            }
         }
-    }
+    else:
+        CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "sneaker-local-cache",
+            }
+        }
 
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "false").lower() == "true"
