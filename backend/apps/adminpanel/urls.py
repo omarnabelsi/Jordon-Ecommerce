@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.adminpanel.views import (
+    AdminBulkOrderStatusView,
     AdminDashboardView,
     AdminLookupView,
     AdminOrderDetailView,
@@ -28,6 +29,7 @@ urlpatterns = [
     path("orders/", AdminOrderListView.as_view(), name="admin-orders"),
     path("orders/<int:id>/", AdminOrderDetailView.as_view(), name="admin-order-detail"),
     path("orders/<int:id>/status/", AdminOrderStatusUpdateView.as_view(), name="admin-order-status-update"),
+    path("orders/bulk-status/", AdminBulkOrderStatusView.as_view(), name="admin-bulk-order-status"),
     path("orders/export/", AdminOrdersExportView.as_view(), name="admin-orders-export"),
     path("users/", AdminUserListView.as_view(), name="admin-users"),
     path("users/<int:id>/", AdminUserDetailView.as_view(), name="admin-user-detail"),

@@ -180,9 +180,19 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
             .order_by("-revenue")[:8]
         )
 
-        recent_orders = Order.objects.select_related("user").order_by("-created_at")[:10]
-        recent_order_data = [
-            {
+        recent_orders = Order.objects.select_related("user").prefetch_related("items__product_variant__product__images").order_by("-created_at")[:10]
+        recent_order_data = []
+        for order in recent_orders:
+            product_image = None
+            first_item = order.items.first()
+            if first_item and first_item.product_variant:
+                product = first_item.product_variant.product
+                primary_img = product.images.filter(is_primary=True).first() or product.images.first()
+                if primary_img and primary_img.image:
+                    from apps.products.serializers import _normalize_image_url
+                    product_image = _normalize_image_url(primary_img.image.url)
+
+            recent_order_data.append({
                 "id": order.id,
                 "order_number": order.order_number,
                 "customer_email": order.user.email,
@@ -190,9 +200,8 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
                 "payment_status": order.payment_status,
                 "grand_total": str(order.grand_total),
                 "created_at": order.created_at,
-            }
-            for order in recent_orders
-        ]
+                "product_image": product_image,
+            })
 
         low_stock_variants = ProductVariant.objects.select_related("product").filter(stock_quantity__lte=8).order_by("stock_quantity")[:12]
         inventory_alerts = [
@@ -222,6 +231,27 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
             .order_by("bucket")
         )
 
+        # Get product images for top products
+        top_product_data = []
+        for row in top_products:
+            product_image = None
+            try:
+                product = Product.objects.prefetch_related("images").get(id=row["product_variant__product__id"])
+                primary_img = product.images.filter(is_primary=True).first() or product.images.first()
+                if primary_img and primary_img.image:
+                    from apps.products.serializers import _normalize_image_url
+                    product_image = _normalize_image_url(primary_img.image.url)
+            except Product.DoesNotExist:
+                pass
+            top_product_data.append({
+                "product_id": row["product_variant__product__id"],
+                "product_name": row["product_variant__product__name"],
+                "sku": row["product_variant__product__sku"],
+                "units": row["units"],
+                "revenue": round(_decimal_to_float(row["revenue"]), 2),
+                "product_image": product_image,
+            })
+
         return Response(
             {
                 "kpis": {
@@ -238,16 +268,7 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
                 },
                 "revenue_series": revenue_series,
                 "status_distribution": list(status_distribution),
-                "top_products": [
-                    {
-                        "product_id": row["product_variant__product__id"],
-                        "product_name": row["product_variant__product__name"],
-                        "sku": row["product_variant__product__sku"],
-                        "units": row["units"],
-                        "revenue": round(_decimal_to_float(row["revenue"]), 2),
-                    }
-                    for row in top_products
-                ],
+                "top_products": top_product_data,
                 "category_sales": [
                     {
                         "category": row["product_variant__product__category__name"] or "Uncategorized",
@@ -266,6 +287,32 @@ class AdminDashboardView(StaffOnlyMixin, APIView):
                     for row in monthly_revenue
                 ],
             },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminBulkOrderStatusView(StaffOnlyMixin, APIView):
+    """Update status for multiple orders at once."""
+    def post(self, request):
+        order_ids = request.data.get("order_ids", [])
+        new_status = request.data.get("status")
+
+        if not order_ids or not new_status:
+            return Response(
+                {"detail": "order_ids and status are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        valid_statuses = [choice[0] for choice in Order.STATUS_CHOICES]
+        if new_status not in valid_statuses:
+            return Response(
+                {"detail": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated = Order.objects.filter(id__in=order_ids).update(status=new_status)
+        return Response(
+            {"detail": f"Updated {updated} orders to '{new_status}'."},
             status=status.HTTP_200_OK,
         )
 

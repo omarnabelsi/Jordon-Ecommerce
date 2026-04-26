@@ -278,3 +278,52 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Admin Light Mode */
+.admin-light-mode .admin-page-bg {
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+.admin-light-mode .admin-sidebar {
+  background: linear-gradient(180deg, #fff, #f8f9fa) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.admin-light-mode .admin-topbar {
+  background: linear-gradient(180deg, #fff, #f8f9fa) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.admin-light-mode .admin-card {
+  background: linear-gradient(180deg, #fff, #f9fafb) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-light-mode .admin-nav-item {
+  background: rgba(248, 249, 250, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #374151 !important;
+}
+
+.admin-light-mode .admin-nav-item.is-active {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05)) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #b91c1c !important;
+}
+
+/* Print styles for invoice */
+@media print {
+  nav, header, footer, aside, button, .admin-sidebar, .admin-topbar {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .card-surface {
+    border: 1px solid #ddd !important;
+    background: white !important;
+  }
+}

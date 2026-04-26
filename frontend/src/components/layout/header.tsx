@@ -44,6 +44,7 @@ export function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const activeCategory = searchParams.get("category");
 
@@ -91,6 +92,10 @@ export function Navbar() {
       isMounted = false;
     };
   }, [setUser]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 12);
@@ -191,7 +196,7 @@ export function Navbar() {
               aria-label="Open cart"
             >
               <ShoppingBag size={17} />
-              {totalItems > 0 ? (
+              {mounted && totalItems > 0 ? (
                 <span className="absolute -right-2 -top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]">
                   {totalItems}
                 </span>
@@ -317,6 +322,3 @@ export function Navbar() {
   );
 }
 
-export function Header() {
-  return <Navbar />;
-}

@@ -383,6 +383,3 @@ export function HeroSlider() {
   );
 }
 
-export function HeroSection() {
-  return <HeroSlider />;
-}

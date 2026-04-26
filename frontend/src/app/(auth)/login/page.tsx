@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { LoginValues, loginSchema } from "@/lib/validators/auth";
 import { useAuthStore } from "@/store/auth-store";
+import { AxiosError } from "axios";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,7 +66,14 @@ export default function LoginPage() {
 
           {loginMutation.isError ? (
             <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3">
-              <p className="text-sm text-red-400">Invalid email or password. Please try again.</p>
+              <p className="text-sm text-red-400">
+                {(() => {
+                  const err = loginMutation.error as AxiosError<{ detail?: string }>;
+                  const detail = err.response?.data?.detail;
+                  if (err.response?.status === 429) return "Too many login attempts. Please wait a moment and try again.";
+                  return detail || "Invalid email or password. Please try again.";
+                })()}
+              </p>
             </div>
           ) : null}
           {loginMutation.isSuccess ? (

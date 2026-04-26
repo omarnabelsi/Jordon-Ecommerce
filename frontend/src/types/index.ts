@@ -61,6 +61,7 @@ export interface CartItem {
   variant_id: number;
   product_name: string;
   product_slug: string;
+  product_image?: string | null;
   size: string;
   color_name: string;
   color_hex: string;
@@ -77,7 +78,3 @@ export interface Cart {
   stock_reserved_until: string | null;
 }
 
-export interface ApiError {
-  detail?: string;
-  [key: string]: unknown;
-}

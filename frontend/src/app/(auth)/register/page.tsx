@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { RegisterValues, registerSchema } from "@/lib/validators/auth";
 import { useAuthStore } from "@/store/auth-store";
+import { AxiosError } from "axios";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -35,6 +36,25 @@ export default function RegisterPage() {
       }
     }
   });
+
+  const getRegisterError = () => {
+    if (!registerMutation.error) return null;
+    const err = registerMutation.error as AxiosError<Record<string, string | string[]>>;
+    const data = err.response?.data;
+    if (!data || typeof data !== "object") return "Could not create account. Please try again.";
+
+    // Collect all field-level errors into a readable list
+    const messages: string[] = [];
+    for (const [key, value] of Object.entries(data)) {
+      const msg = Array.isArray(value) ? value.join(", ") : String(value);
+      if (key === "detail" || key === "non_field_errors") {
+        messages.push(msg);
+      } else {
+        messages.push(`${key}: ${msg}`);
+      }
+    }
+    return messages.length > 0 ? messages.join(" | ") : "Could not create account. Please try again.";
+  };
 
   return (
     <section className="container-shell py-14">
@@ -90,7 +110,7 @@ export default function RegisterPage() {
           ) : null}
           {registerMutation.isError ? (
             <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3">
-              <p className="text-sm text-red-400">Could not create account. Please try again.</p>
+              <p className="text-sm text-red-400">{getRegisterError()}</p>
             </div>
           ) : null}
         </form>

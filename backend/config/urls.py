@@ -1,13 +1,11 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.core.views import healthcheck
 
-def healthcheck(_request):
-    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
     path("healthz/", healthcheck, name="healthcheck"),

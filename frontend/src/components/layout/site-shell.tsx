@@ -6,6 +6,7 @@ import { ReactNode, Suspense } from "react";
 
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/header";
+import { ToastContainer } from "@/components/ui/toast";
 
 interface SiteShellProps {
   children: ReactNode;
@@ -14,11 +15,15 @@ interface SiteShellProps {
 export function SiteShell({ children }: SiteShellProps) {
   const pathname = usePathname();
 
+  const isAdmin = pathname?.startsWith("/admin");
+
   return (
     <>
-      <Suspense fallback={<div className="h-20 border-b border-white/10 bg-black/60 backdrop-blur-xl" />}>
-        <Navbar />
-      </Suspense>
+      {!isAdmin && (
+        <Suspense fallback={<div className="h-20 border-b border-white/10 bg-black/60 backdrop-blur-xl" />}>
+          <Navbar />
+        </Suspense>
+      )}
       <AnimatePresence mode="wait" initial={false}>
         {/* Key the main container by pathname for subtle route-to-route transitions. */}
         <motion.main
@@ -31,7 +36,9 @@ export function SiteShell({ children }: SiteShellProps) {
           {children}
         </motion.main>
       </AnimatePresence>
-      <Footer />
+      {!isAdmin && <Footer />}
+      <ToastContainer />
     </>
   );
 }
+

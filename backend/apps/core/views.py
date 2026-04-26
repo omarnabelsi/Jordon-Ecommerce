@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from rest_framework import generics, permissions
 from rest_framework.throttling import ScopedRateThrottle
 
@@ -11,3 +12,7 @@ class ContactMessageCreateView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "contact"
+
+
+def healthcheck(_request):
+    return JsonResponse({"status": "ok"})

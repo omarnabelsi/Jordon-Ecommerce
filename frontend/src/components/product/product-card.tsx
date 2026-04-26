@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
 import { Cart, Product } from "@/types";
+import { showToast } from "@/components/ui/toast";
 
 interface ProductCardProps {
   product: Product;
@@ -84,6 +85,7 @@ export function ProductCard({ product, priority = false, showQuickActions = true
       setCart(cart);
       queryClient.setQueryData(["cart"], cart);
       setFeedback({ type: "success", message: "Added to cart" });
+      showToast("success", `${product.name} added to cart`);
     },
     onError: (error) => {
       const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -98,6 +100,7 @@ export function ProductCard({ product, priority = false, showQuickActions = true
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       setFeedback({ type: "success", message: "Saved to wishlist" });
+      showToast("success", `${product.name} saved to wishlist`);
     },
     onError: (error) => {
       const status = (error as { response?: { status?: number } })?.response?.status;
@@ -122,7 +125,7 @@ export function ProductCard({ product, priority = false, showQuickActions = true
   return (
     <article className="interactive-card card-surface group overflow-hidden border border-white/10 transition duration-300 hover:border-red-500/50 hover:shadow-glow">
       <div className="relative h-52 overflow-hidden">
-        <Link href={`/products/${product.slug}`} className="block h-full w-full">
+        <Link href={`/products/${product.slug}`} className="relative block h-full w-full">
           <Image
             src={image}
             alt={product.name}

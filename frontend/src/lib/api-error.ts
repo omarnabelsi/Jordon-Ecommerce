@@ -42,12 +42,3 @@ export function getApiErrorMessage(error: unknown, fallback = "Something went wr
   return fallback;
 }
 
-export function isApiConfigurationError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as { message?: unknown }).message === "string" &&
-    String((error as { message: string }).message).includes("NEXT_PUBLIC_API_URL")
-  );
-}

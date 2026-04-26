@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useCart } from "@/hooks/use-cart";
 import { useFeaturedProducts, useProductDetail } from "@/hooks/use-products";
+import { showToast } from "@/components/ui/toast";
 
 import { ProductCard } from "./product-card";
 
@@ -75,7 +76,36 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   }, [product?.variants, selectedColorName]);
 
   if (isLoading || !product) {
-    return <div className="container-shell py-16 text-white/60">Loading product details...</div>;
+    return (
+      <div className="container-shell space-y-12 py-12">
+        <section className="grid gap-8 lg:grid-cols-2">
+          <div className="skeleton-shimmer h-[420px] rounded-2xl" />
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="skeleton-shimmer h-3 w-24 rounded-full" />
+              <div className="skeleton-shimmer h-12 w-3/4 rounded-lg" />
+              <div className="skeleton-shimmer h-4 w-full rounded-lg" />
+            </div>
+            <div className="skeleton-shimmer h-10 w-40 rounded-lg" />
+            <div className="flex gap-3">
+              <div className="skeleton-shimmer h-12 w-12 rounded-full" />
+              <div className="skeleton-shimmer h-12 w-12 rounded-full" />
+              <div className="skeleton-shimmer h-12 w-12 rounded-full" />
+            </div>
+            <div className="flex gap-2">
+              <div className="skeleton-shimmer h-10 w-16 rounded-lg" />
+              <div className="skeleton-shimmer h-10 w-16 rounded-lg" />
+              <div className="skeleton-shimmer h-10 w-16 rounded-lg" />
+            </div>
+            <div className="flex gap-3">
+              <div className="skeleton-shimmer h-12 w-32 rounded-full" />
+              <div className="skeleton-shimmer h-12 flex-1 rounded-full" />
+              <div className="skeleton-shimmer h-12 w-32 rounded-full" />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -201,6 +231,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                   await addToCart.mutateAsync({ product_variant_id: selectedVariant.id, quantity });
                   setQuantity(1);
                   setActionMessage({ type: "success", text: "Added to cart successfully." });
+                  showToast("success", `${product.name} added to cart`);
                 } catch (error) {
                   setActionMessage({ type: "error", text: getErrorMessage(error, "Could not add to cart. Please try again.") });
                 }

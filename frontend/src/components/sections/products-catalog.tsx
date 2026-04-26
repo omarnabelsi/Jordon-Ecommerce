@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { Product } from "@/types";
 
 import { ProductCard } from "../product/product-card";
+import { ProductCardSkeleton } from "../product/product-card-skeleton";
 import { Input } from "../ui/input";
 
 export function ProductsCatalog() {
@@ -215,7 +216,13 @@ export function ProductsCatalog() {
         </aside>
 
         <div>
-          {isLoading ? <p className="text-white/60">Loading products...</p> : null}
+          {isLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : null}
           {productsErrorMessage ? (
             <p className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {productsErrorMessage}

@@ -87,6 +87,3 @@ export function CTASection() {
   );
 }
 
-export function NewsletterSection() {
-  return <CTASection />;
-}

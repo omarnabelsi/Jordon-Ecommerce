@@ -35,6 +35,7 @@ export interface AdminDashboardData {
     sku: string;
     units: number;
     revenue: number;
+    product_image: string | null;
   }>;
   category_sales: Array<{
     category: string;
@@ -49,6 +50,7 @@ export interface AdminDashboardData {
     payment_status: string;
     grand_total: string;
     created_at: string;
+    product_image: string | null;
   }>;
   inventory_alerts: Array<{
     id: number;
