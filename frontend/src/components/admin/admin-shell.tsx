@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3, Boxes, Download, LogOut, PackageSearch, ShieldCheck,
-  ShoppingCart, Users, Search, X, Moon, Sun
+  ShoppingCart, Users, Search, X
 } from "lucide-react";
 
 import { api } from "@/lib/api";
@@ -53,20 +53,11 @@ export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearUser } = useAuthStore();
-  const [darkMode, setDarkMode] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.remove("admin-light");
-    } else {
-      document.documentElement.classList.add("admin-light");
-    }
-  }, [darkMode]);
 
   // Close search on click outside
   useEffect(() => {
@@ -154,7 +145,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const roleLabel = user?.is_superuser ? "Admin" : user?.is_staff ? "Staff" : "User";
 
   return (
-    <section className={`admin-page-bg min-h-screen ${!darkMode ? "admin-light-mode" : ""}`}>
+    <section className="admin-page-bg min-h-screen">
       <div className="admin-grid">
         <aside className="admin-sidebar">
           <div className="admin-sidebar-brand">
@@ -284,15 +275,6 @@ export function AdminShell({ children }: AdminShellProps) {
                   </div>
                 ) : null}
               </div>
-
-              {/* Dark/Light Toggle */}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/70 text-slate-300 transition hover:text-white"
-                title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
 
               <div className="rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-right">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Environment</p>
